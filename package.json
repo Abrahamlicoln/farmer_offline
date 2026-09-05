@@ -10,6 +10,7 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate-locations": "tsx scripts/migrate-locations.ts",
+    "db:fetch-and-seed": "tsx scripts/fetch-and-seed-locations.ts",
     "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {

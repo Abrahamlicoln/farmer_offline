@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model State {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  lgas      Lga[]
+  farmers   Farmer[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+}
+
+model Lga {
+  id           String        @id @default(cuid())
+  code         String
+  name         String
+  stateId      String
+  state        State         @relation(fields: [stateId], references: [code], onDelete: Cascade)
+  wards        Ward[]
+  pollingUnits PollingUnit[]
+  farmers      Farmer[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([stateId, code])
+  @@index([stateId])
+}
+
+model Ward {
+  id           String        @id @default(cuid())
+  code         String
+  name         String
+  lgaId        String
+  lga          Lga           @relation(fields: [lgaId], references: [id], onDelete: Cascade)
+  pollingUnits PollingUnit[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([lgaId])
+}
+
+model PollingUnit {
+  id           String   @id @default(cuid())
+  code         String
+  name         String
+  delimitation String   @unique // e.g. "25/01/01/001"
+  wardId       String?
+  ward         Ward?    @relation(fields: [wardId], references: [id], onDelete: SetNull)
+  lgaId        String
+  lga          Lga      @relation(fields: [lgaId], references: [id], onDelete: Cascade)
+  stateId      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([stateId])
+  @@index([lgaId])
+  @@index([delimitation])
+}
+
+model Farmer {
+  id              String   @id // Unique Farmer ID e.g. "OAF-NG-2026-XXXXX"
+  fullName        String
+  phoneNumber     String
+  stateCode       String
+  stateName       String
+  state           State?   @relation(fields: [stateCode], references: [code])
+  lgaId           String?
+  lgaName         String
+  lga             Lga?     @relation(fields: [lgaId], references: [id])
+  village         String   // Village or Community name
+  pollingUnitCode String?  // Optional associated polling unit / delimitation code
+  programme       String   // e.g., "Maize Seed & Fertilizer", "Rice Value Chain", etc.
+  registeredBy    String   @default("Field Officer")
+  syncStatus      String   @default("synced") // "pending" | "synced" | "failed"
+  syncedAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([phoneNumber])
+  @@index([stateCode])
+  @@index([programme])
+  @@index([createdAt])
+}
+
+model SyncAuditLog {
+  id             String   @id @default(cuid())
+  batchId        String
+  farmerId       String
+  status         String   // "SUCCESS" | "DUPLICATE_IGNORED" | "FAILED"
+  message        String?
+  clientDeviceId String?
+  timestamp      DateTime @default(now())
+
+  @@index([batchId])
+  @@index([farmerId])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed or standard demo password
+  fullName  String
+  role      String   // "officer" | "admin"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
