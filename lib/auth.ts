@@ -82,7 +82,23 @@ export async function authenticateUser(
   }
 
   // 2. Offline Fallback Authentication
-  const matched = DEFAULT_OFFLINE_ACCOUNTS[cleanEmail];
+  let matched = DEFAULT_OFFLINE_ACCOUNTS[cleanEmail];
+
+  // Also check dynamically registered officers stored locally
+  if (!matched && typeof window !== "undefined") {
+    try {
+      const dynamicAccountsJson = localStorage.getItem("oaf_dynamic_offline_accounts");
+      if (dynamicAccountsJson) {
+        const dynamicAccounts = JSON.parse(dynamicAccountsJson);
+        if (dynamicAccounts[cleanEmail]) {
+          matched = dynamicAccounts[cleanEmail];
+        }
+      }
+    } catch {
+      // ignore parse error
+    }
+  }
+
   if (matched && matched.password === cleanPassword) {
     // Generate persistent offline session token
     const token = `oaf_offline_jwt_${btoa(
@@ -169,5 +185,25 @@ export function clearAuthSession(): void {
     localStorage.removeItem(USER_KEY);
   } catch (err) {
     console.error("[Auth] Failed to clear session:", err);
+  }
+}
+
+/**
+ * Caches newly registered officers for offline fallback authentication.
+ */
+export function saveDynamicOfflineAccount(
+  email: string,
+  password: string,
+  user: AuthUser
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = localStorage.getItem("oaf_dynamic_offline_accounts");
+    const accounts = existing ? JSON.parse(existing) : {};
+    accounts[cleanEmail] = { password, user };
+    localStorage.setItem("oaf_dynamic_offline_accounts", JSON.stringify(accounts));
+  } catch (e) {
+    console.error("[Auth] Failed to cache dynamic offline account:", e);
   }
 }
