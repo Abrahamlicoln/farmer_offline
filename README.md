@@ -1,173 +1,162 @@
 # One Acre Fund Nigeria — Offline-First Farmer Registration & Admin Suite
+
 > **Farmers First | Tech Specialist R1 Exercise Prototype**
 
-An offline-first web application prototype designed for One Acre Fund Field Officers working in rural Nigerian communities with intermittent or zero internet connectivity. The system allows field officers to capture farmer information offline with instant local validation, ensures 100% data preservation via IndexedDB, and synchronizes seamlessly to a central Neon PostgreSQL database when connectivity becomes available.
+**Live Deployed Application:** [https://farmer-offline.vercel.app/](https://farmer-offline.vercel.app/)
+
+An offline-first web application prototype designed for One Acre Fund Field Officers operating in rural Nigerian communities with intermittent or zero internet connectivity. Field officers can capture farmer records completely offline with instant local validation, preserve 100% of data via client-side IndexedDB, and synchronize seamlessly to a central Neon PostgreSQL cloud database whenever internet connectivity is restored.
 
 ---
 
-## Architecture Overview
+## 🧭 Quick Application Navigation Guide
 
-```
-                      [ Field Officer in Rural Nigeria ]
-                                       │
-                      (No Internet / Zero Signal Zone)
-                                       │
-                                       ▼
-                       ┌──────────────────────────────┐
-                       │  Client-Side Web Application │
-                       │    (Next.js App Router)      │
-                       └──────────────┬───────────────┘
-                                      │
-                         Dexie.js IndexedDB Engine
-                                      │
-              ┌───────────────────────┴───────────────────────┐
-              ▼                                               ▼
-    ┌───────────────────┐                           ┌───────────────────┐
-    │  Offline Location │                           │  Farmer Records   │
-    │  Cache (State,    │                           │  Storage (Status: │
-    │  LGA, Village PU) │                           │  Pending/Synced)  │
-    └───────────────────┘                           └─────────┬─────────┘
-                                                              │
-                       [ Internet Connection Resumes ]         │
-                               (or 30s Heartbeat)             │
-                                       │                      │
-                                       ▼                      ▼
-                       ┌──────────────────────────────────────────────┐
-                       │         Batch Synchronization Engine         │
-                       │           (Idempotent POST /api/sync)        │
-                       └──────────────────────┬───────────────────────┘
-                                              │
-                                              ▼
-                       ┌──────────────────────────────────────────────┐
-                       │       Central Server & Admin Portal          │
-                       │   Neon PostgreSQL (Prisma ORM) + Recharts    │
-                       └──────────────────────────────────────────────┘
-```
+The application suite provides tailored experiences for both **Field Officers** and **Operations Supervisors**:
+
+| Section / Page                   | Route             | Intended User      | Key Capabilities                                                                                                                                   |
+| :------------------------------- | :---------------- | :----------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Farmer Registration**          | `/register`       | Field Officer      | Fast, offline-first registration form with cascading Nigerian States/LGAs/Polling Units, duplicate phone detection, and instant IndexedDB storage. |
+| **Field Records**                | `/farmers`        | Field Officer      | View locally captured farmers, filter by sync status (`Pending` / `Synced`), search by name/phone/ID, and view farmer profile cards.               |
+| **Admin Portal**                 | `/admin`          | Operations Admin   | Centralized supervisor dashboard with real-time KPI metrics, crop programme distribution charts, and regional enrollment analytics.                |
+| **Field Officers & Performance** | `/admin/officers` | Operations Admin   | Officer management directory showing field assignments, total registered farmers per officer, and a "View Farmers" inspection modal.               |
+| **Sync Audit Logs**              | `/sync-logs`      | Admin / Supervisor | Complete historical audit trail of all synchronization batches, payload sizes, device IDs, and deduplication statuses.                             |
+| **Network & Sync Controller**    | Top Header        | All Users          | One-click **"Simulate Offline" / "Go Online"** toggle, manual **"Sync Now"** trigger, and live animated progress notification.                     |
 
 ---
 
 ## 1. How to Run or Access the Application Suite
 
-### Prerequisites
+### Option A: Access the Live Deployment (Instant)
+
+Access the live prototype directly in your browser:
+👉 **[https://farmer-offline.vercel.app/](https://farmer-offline.vercel.app/)**
+
+**One-Click Demo Credentials:**
+
+- **Field Officer Portal:** `officer.nigeria@oneacrefund.org` / `Password123!`  
+  _(Captures farmer profiles offline, queues records locally, triggers sync)_
+- **Operations Admin Portal:** `admin.operations@oneacrefund.org` / `Password123!`  
+  _(Supervises field officers, monitors regional analytics, reviews central PostgreSQL records)_
+
+---
+
+### Option B: Running Locally
+
+#### Prerequisites
+
 - **Node.js**: v18.18+ or v20+
 - **npm**: v9+ or v10+
 
-### Setup & Startup Commands
+#### Simple 3-Step Setup
 
-1. **Clone the repository:**
+1. **Clone the repository and install dependencies:**
+
    ```bash
    git clone <repo-url>
    cd farmer_offline
-   ```
-
-2. **Install dependencies:**
-   ```bash
    npm install
    ```
 
-3. **Configure Environment Variables (`.env`):**
-   A pre-configured `.env` file is included in the project root pointing to the live Neon PostgreSQL database:
-   ```env
-   DATABASE_URL="postgresql://neondb_owner:npg_k0m9APpUHyDV@ep-long-band-ap9jwocv-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-   NEXT_PUBLIC_APP_NAME="One Acre Fund Nigeria"
-   ```
+2. **Configure Environment:**
+   Copy the provided environment template (pre-configured for database access):
 
-4. **Sync Database Schema & Seed Locations:**
    ```bash
-   # Push Prisma schema to Neon PostgreSQL
-   npx prisma db push
-
-   # Populate Nigerian States, LGAs, Polling Units, and sample synced farmers
-   npm run db:migrate-locations
+   cp .env.example .env
    ```
 
-5. **Start the Development Server:**
+3. **Start the application:**
    ```bash
    npm run dev
    ```
-
-6. **Access the Portal:**
-   Open your browser and navigate to:
-   - **Main App / Login**: [http://localhost:3000/signin](http://localhost:3000/signin)
-   - Click **"Continue as Field Officer"** to register farmers offline, or **"Operations Admin"** to inspect central analytics.
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 2. Technology Stack Used
+## 2. The Technology Stack Used
 
-| Layer | Technology | Rationale |
-| :--- | :--- | :--- |
-| **Framework** | **Next.js 16 (App Router) + React 19** | Modern, performant server-side API routes and responsive client components. |
-| **Styling** | **Pure Tailwind CSS v4** | Lightweight utility classes matching modern clean aesthetics, zero bloated dependencies. |
-| **Offline Storage** | **Dexie.js (IndexedDB wrapper)** | High-performance client-side transactional database with reactive query hooks (`dexie-react-hooks`). |
-| **Server Database** | **Neon Database (PostgreSQL via Prisma ORM)** | Serverless PostgreSQL with connection pooling, transactional upserts, and strict relational integrity. |
-| **Form Validation** | **React Hook Form + Zod** | Strict schema validation with inline error messaging and custom regex for Nigerian phone numbers. |
-| **Analytics & Charts** | **Recharts** | Declarative SVG bar charts and donut charts for state-by-state and programme distributions. |
-| **Realtime Sync Feedback** | **Custom Event Broadcaster (`SyncProgressPopup`)** | Live progress notification showing syncing progress bar and completion metrics. |
+| Layer                               | Technology                             | Rationale & Architectural Fit                                                                                                                   |
+| :---------------------------------- | :------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Framework**                       | **Next.js 16 (App Router) + React 19** | Server-side rendering, API route handlers for synchronization endpoints, and optimized client bundle.                                           |
+| **Styling & Design System**         | **Tailwind CSS v4**                    | Lightweight modern aesthetics. Dual-view layout featuring high-density tables for desktop and responsive touch cards for mobile field devices.  |
+| **Offline Storage**                 | **Dexie.js (IndexedDB wrapper)**       | High-throughput client-side database with reactive live queries (`dexie-react-hooks`). Enables instant reads/writes without network roundtrips. |
+| **Server Database**                 | **Neon PostgreSQL via Prisma ORM**     | Cloud PostgreSQL with connection pooling, transactional batch upserts, strict relational integrity, and automated schema management.            |
+| **Validation & Integrity**          | **React Hook Form + Zod**              | Client-side and server-side schema validation with custom Nigerian telephone formatting (`+234`, `080`, `070`, `081`, `090`, `091`).            |
+| **Notifications & Cloud Messaging** | **Firebase SDK & FCM Integration**     | Client SDK and backend service account structure configured for real-time alerts and background sync dispatching.                               |
+| **Analytics & Visualizations**      | **Recharts + Lucide Icons**            | Interactive SVG donut charts and regional distribution bar charts for real-time operational monitoring.                                         |
 
 ---
 
-## 3. How to Test Offline and Synchronization Behaviour
+## 3. How to Test the Offline and Synchronization Behaviour
 
-The application includes an **in-app Network Mode Switcher** located in the top header, allowing reviewers to test offline behavior effortlessly without opening browser developer tools.
+The application includes an **in-app Network Mode Switcher** in the top header, allowing reviewers to simulate offline behavior on any device without opening browser developer tools.
 
-### Test Scenario A: Testing Offline Registration
-1. Start at [http://localhost:3000/register](http://localhost:3000/register).
-2. Click the **"Simulate Offline"** toggle in the top-right header (or switch off network in Chrome DevTools > Network tab > "Offline").
-3. Notice the amber **"Simulated Offline"** indicator and the yellow alert banner.
+### Test Scenario 1: Offline Farmer Registration
+
+1. Navigate to **Farmer Registration** (`/register`).
+2. Click the **"Simulate Offline"** button in the header (or switch Chrome DevTools > Network to "Offline").
+3. Notice the amber **"Simulated Offline"** indicator and banner confirming the device is operating offline.
 4. Fill in the form:
-   - **Name**: `Musa Ibrahim`
-   - **Phone**: `08031234567`
-   - **State**: `Nasarawa` (or `Niger`, `Kano`, `Kaduna`)
-   - **LGA**: Select an LGA (cascades instantly from local IndexedDB cache)
-   - **Village / Polling Unit**: Pick a community cluster or click "+ Type custom village"
-   - **Programme**: Select `Maize Seed & Fertilizer`
+   - **Full Name:** `Musa Ibrahim`
+   - **Phone Number:** `08031234567`
+   - **State & LGA:** Cascades instantly from the local IndexedDB cache without internet.
+   - **Village / Polling Unit:** Select an INEC polling unit cluster or enter a custom village.
+   - **Crop Programme:** `Maize Seed & Fertilizer`
 5. Click **"Save Farmer Record"**.
-6. **Result**:
-   - Record is stored immediately in IndexedDB with an auto-generated unique ID (e.g. `OAF-NG-2026-X8K9M`).
-   - Navigating to **"Field Records"** (`/farmers`) shows the new record marked with an **amber "Pending" badge**.
+6. **Result:** The record saves in milliseconds with a unique client ID (e.g. `OAF-NG-2026-X8K9M`). On **Field Records** (`/farmers`), the record appears immediately with an **amber "Pending" badge**.
 
-### Test Scenario B: Testing Duplicate Phone Number Warning
-1. On the registration form, type `08031234567` again.
-2. Notice the **Custom Alert** immediately surfaces:
-   > *"Duplicate Phone Number Detected: Phone number already registered on this device for Musa Ibrahim (ID: OAF-NG-2026-...)."*
-3. The alert is dismissable and provides operational guidance for shared household phones.
+### Test Scenario 2: Offline Duplicate Phone Number Warning
 
-### Test Scenario C: Testing Synchronization to Server
-1. Click the header toggle **"Go Online"** (or re-enable network in DevTools).
-2. Click **"Sync Now"** in the top header (or wait up to 30 seconds for the **auto-heartbeat sync** to trigger automatically).
-3. Observe the floating **`SyncProgressPopup`** appear:
-   - Live animated progress bar: *"Syncing 1 of 1 records..."*
-   - Transitions to green checkmark: *"Sync Completed: 1 records synced"*.
-4. Check **"Field Records"** (`/farmers`): The record badge updates from **"Pending"** to **"Synced ✓"**.
-5. Check **"Admin Portal"** (`/admin`): The record now appears in the central database table, and the analytical KPI metrics increment in real time.
+1. While still offline, open the registration form (`/register`).
+2. Enter the same phone number (`08031234567`).
+3. **Result:** A dismissable operational warning appears immediately:
+   > _"Duplicate Phone Number Detected: Phone number already registered on this device for Musa Ibrahim (ID: OAF-NG-2026-...)."_
+   > Field officers are alerted to potential duplicates while retaining the flexibility required for shared family devices.
 
-### Test Scenario D: Testing Idempotency (Duplicate Request Prevention)
-1. Go to **"Sync Audit Logs"** (`/sync-logs`).
-2. Even if a network glitch triggers the sync request twice, or the same payload is re-submitted, the server's `upsert` and unique ID deduplication ensures zero duplicate records are created, logging the event as `DUPLICATE_IGNORED`.
+### Test Scenario 3: Cloud Synchronization
 
----
+1. Click the header toggle **"Go Online"** (or uncheck Offline in DevTools).
+2. Click **"Sync Now"** in the header (or wait up to 30 seconds for the **auto-heartbeat sync** to trigger automatically).
+3. **Result:**
+   - The animated **`SyncProgressPopup`** displays live progress (`Syncing 1 of 1 records...`) followed by a green completion checkmark.
+   - On **Field Records** (`/farmers`), the status updates to **"Synced ✓"**.
+   - On the **Admin Portal** (`/admin`), the new farmer appears in the central database table and KPI analytics increment in real time.
 
-## 4. Key Assumptions & Limitations
+### Test Scenario 4: Idempotency & Fault Tolerance
 
-1. **Rural Telephone Sharing**: In rural Nigerian communities, several members of an extended family often share a single mobile device. For this reason, the duplicate phone check acts as an **informative warning** rather than a hard block, allowing field officers to proceed if justified.
-2. **Client-Side ID Generation**: Farmer IDs (`OAF-NG-2026-XXXXX`) are generated client-side with high-entropy cryptographic randomness so that records created offline have permanent, collision-resistant primary keys before ever contacting the server.
-3. **Location Hierarchy Granularity**: Polling units from official INEC delimitation data are mapped to the community/village level. A free-text fallback allows field officers to register newly established settlements not yet in the official polling database.
-4. **Heartbeat Fallback**: Because `navigator.onLine` can report false positives (such as being connected to a field router with no upstream satellite/cellular backhaul), the system incorporates a 30-second active health ping to `/api/health`.
+1. Navigate to **Sync Audit Logs** (`/sync-logs`).
+2. Trigger **"Sync Now"** again with no new records.
+3. The server validates payloads against unique client IDs (`OAF-NG-2026-...`), ensuring zero duplicate entries in PostgreSQL even during network retry spikes.
 
----
+### Test Scenario 5: Supervisor Field Officer Tracking
 
-## 5. AI Tools Used & What They Helped Accomplish
-
-| AI Tool | Contribution & Value Delivered |
-| :--- | :--- |
-| **Google Antigravity (Gemini 3.8 Flash)** | Orchestrated end-to-end architecture design, offline Dexie.js schema design, idempotent sync protocol, and component implementation. |
-| **Architectural Assistance** | Designed the two-tier offline caching strategy for Nigerian administrative units (State → LGA → Polling Unit), ensuring zero network latency during field data collection. |
-| **Validation & Schema Design** | Generated comprehensive Zod schemas tailored to Nigerian phone number prefixes (`+234`, `080`, `070`, `081`, `090`, `091`) and input sanitization. |
-| **Component System Refinement** | Refactored and modernized reusable components from `pmtool` into pure Tailwind CSS v4, building the custom dismissable alert and responsive sidebar layout. |
+1. Sign in as **Operations Admin** (`admin.operations@oneacrefund.org`).
+2. Navigate to **Field Officers** (`/admin/officers`).
+3. View officer deployment areas, total farmers registered, and click **"View Farmers"** to inspect all farmer profiles submitted by that officer.
 
 ---
 
-## License & Attribution
-Developed for the **One Acre Fund Nigeria Tech Specialist Evaluation** (September 2026).
-All trademarks belong to One Acre Fund.
+## 4. Key Assumptions or Limitations
+
+1. **Shared Family Telephones:** In rural agrarian households, multiple family members frequently share a single phone. Consequently, duplicate phone detection operates as an **informative warning** rather than a hard block to avoid excluding legitimate farmers.
+2. **Client-Side Cryptographic ID Generation:** Farmer IDs (`OAF-NG-2026-XXXXX`) are generated client-side using high-entropy alphanumeric strings. This ensures every offline record possesses a permanent, collision-resistant primary key before ever contacting the server.
+3. **Location Hierarchy Granularity:** Official INEC polling unit delimitation data is pre-cached to the village/cluster tier. A free-text fallback allows field officers to record newly established hamlets not yet cataloged in official databases.
+4. **Active Heartbeat Fallback:** Because mobile browsers occasionally report false online status when connected to captive WiFi routers lacking actual cellular backhaul, the system utilizes a 30-second background heartbeat ping to `/api/health`.
+5. **Client Storage Durability:** Offline data relies on browser IndexedDB storage. If a user clears their browser cache before synchronizing, unsynced local records would be cleared. The interface clearly communicates pending records to encourage synchronization before maintenance.
+
+---
+
+## 5. The AI Tools Used and What They Helped Accomplish
+
+| AI Tool & Model                               | Contribution & Value Delivered                                                                                                                                                              |
+| :-------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Google Antigravity IDE (Gemini 3.8 Flash)** | **End-to-End System Architecture:** Orchestrated the entire full-stack architecture, defining the IndexedDB schema, Next.js route handlers, and idempotent sync engine.                     |
+| **AI Data Pipeline & Migration**              | **Administrative Location Parsing:** Developed scripts to ingest and structure 176,000+ Nigerian INEC polling units into a lightweight hierarchical JSON and PostgreSQL seed dataset.       |
+| **Resilient Synchronization Design**          | **Idempotent Upsert Protocol:** Designed the batch synchronization protocol with transaction safety in Prisma, ensuring zero data duplication during network drops.                         |
+| **Responsive UI/UX Engineering**              | **Mobile-First Layouts:** Implemented modern, accessible Tailwind CSS v4 layouts with dual-mode responsive rendering (desktop tables and mobile touch cards for field tablets/phones).      |
+| **Validation & Error Handling**               | **Localized Schema Validation:** Formatted strict Zod schemas customized to Nigerian telecommunications numbering plans (`080`, `081`, `070`, `090`, `091`) and localized identity formats. |
+
+---
+
+## 📄 License & Attribution
+
+Developed for the **One Acre Fund Nigeria Tech Specialist Evaluation** (September 2026).  
+Farmers First. All trademarks belong to One Acre Fund.
