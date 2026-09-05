@@ -630,67 +630,114 @@ export default function AdminPortalPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto max-h-150 overflow-y-auto scrollbar-thin">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-[#F5F7FA] shadow-xs">
-                    <TableRow>
-                      <TableHead>Farmer ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Location (LGA, State)</TableHead>
-                      <TableHead>Village</TableHead>
-                      <TableHead>Programme</TableHead>
-                      <TableHead>Officer</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredFarmers.map((f) => (
-                      <TableRow key={f.id}>
-                        <TableCell className="text-xs font-semibold text-emerald-800">
-                          {f.id}
-                        </TableCell>
-
-                        <TableCell className="font-semibold text-[#0E121B]">
-                          {f.fullName}
-                        </TableCell>
-
-                        <TableCell className="text-xs text-slate-700 font-normal">
-                          {f.phoneNumber}
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="font-medium text-[#0E121B] text-xs">
-                            {f.lgaName}
-                          </div>
-                          <div className="text-[11px] text-slate-500">
-                            {f.stateName}
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="font-medium text-[#0E121B] text-xs">
-                            {f.village}
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <span className="inline-block text-xs font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-100">
-                            {f.programme}
+              <div>
+                {/* Mobile Cards View (< md) */}
+                <div className="md:hidden divide-y divide-gray-100">
+                  {filteredFarmers.map((f) => (
+                    <div key={f.id} className="p-4 space-y-2.5 bg-white hover:bg-slate-50/50 transition-colors">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-sm text-[#0E121B] truncate">
+                            {f.fullName}
+                          </h4>
+                          <span className="text-xs text-slate-500 font-normal">
+                            {f.id}
                           </span>
-                        </TableCell>
+                        </div>
+                        <StatusBadge status="synced" />
+                      </div>
 
-                        <TableCell className="text-xs text-slate-600">
-                          {f.registeredBy || "Field Officer"}
-                        </TableCell>
+                      <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-50">
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-medium">Contact Phone</span>
+                          <a href={`tel:${f.phoneNumber}`} className="text-emerald-700 font-medium hover:underline text-xs">
+                            {f.phoneNumber}
+                          </a>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-medium">Location</span>
+                          <span className="text-slate-700 truncate block text-xs">
+                            {f.village}, {f.lgaName}
+                          </span>
+                        </div>
+                      </div>
 
-                        <TableCell>
-                          <StatusBadge status="synced" />
-                        </TableCell>
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-50 text-xs flex-wrap">
+                        <span className="inline-block text-[11px] font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-100">
+                          {f.programme}
+                        </span>
+
+                        <span className="text-[11px] text-slate-500 truncate">
+                          Officer: {f.registeredBy || "Field Officer"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Structured Table (>= md) */}
+                <div className="hidden md:block overflow-x-auto max-h-150 overflow-y-auto scrollbar-thin">
+                  <Table className="min-w-[780px]">
+                    <TableHeader className="sticky top-0 z-10 bg-[#F5F7FA] shadow-xs">
+                      <TableRow>
+                        <TableHead>Farmer ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Location (LGA, State)</TableHead>
+                        <TableHead>Village</TableHead>
+                        <TableHead>Programme</TableHead>
+                        <TableHead>Officer</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredFarmers.map((f) => (
+                        <TableRow key={f.id}>
+                          <TableCell className="text-xs font-semibold text-emerald-800">
+                            {f.id}
+                          </TableCell>
+
+                          <TableCell className="font-semibold text-[#0E121B]">
+                            {f.fullName}
+                          </TableCell>
+
+                          <TableCell className="text-xs text-slate-700 font-normal">
+                            {f.phoneNumber}
+                          </TableCell>
+
+                          <TableCell>
+                            <div className="font-medium text-[#0E121B] text-xs">
+                              {f.lgaName}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              {f.stateName}
+                            </div>
+                          </TableCell>
+
+                          <TableCell>
+                            <div className="font-medium text-[#0E121B] text-xs">
+                              {f.village}
+                            </div>
+                          </TableCell>
+
+                          <TableCell>
+                            <span className="inline-block text-xs font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-100">
+                              {f.programme}
+                            </span>
+                          </TableCell>
+
+                          <TableCell className="text-xs text-slate-600">
+                            {f.registeredBy || "Field Officer"}
+                          </TableCell>
+
+                          <TableCell>
+                            <StatusBadge status="synced" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </CardContent>

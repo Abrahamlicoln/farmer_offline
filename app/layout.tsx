@@ -15,6 +15,14 @@ export const metadata: Metadata = {
   title: "One Acre Fund Nigeria — Offline Farmer Registration & Admin Portal",
   description:
     "Offline-first farmer registration application and synchronization engine for rural field officers and central operations in Nigeria.",
+  icons: {
+    icon: [
+      { url: "/logo.png", type: "image/png" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

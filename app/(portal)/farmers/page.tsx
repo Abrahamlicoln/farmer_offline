@@ -267,104 +267,189 @@ export default function FieldRecordsPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto max-h-150 overflow-y-auto scrollbar-thin">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-[#F5F7FA] shadow-xs">
-              <TableRow>
-                <TableHead>Farmer</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Location (LGA & Village)</TableHead>
-                <TableHead>Programme</TableHead>
-                {!isOfficer && <TableHead>Officer</TableHead>}
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <div className="rounded-md border border-gray-200/90 bg-white overflow-hidden shadow-none">
+            {/* Mobile Card List (< md) */}
+            <div className="md:hidden divide-y divide-gray-100">
               {filteredFarmers.map((farmer) => {
                 const isPending = farmer.syncStatus === "pending";
                 const isSynced = farmer.syncStatus === "synced";
                 const isFailed = farmer.syncStatus === "failed";
 
                 return (
-                  <TableRow key={farmer.id}>
-                    <TableCell>
-                      <div className="font-semibold text-[#0E121B]">
-                        {farmer.fullName}
+                  <div key={farmer.id} className="p-4 space-y-2.5 bg-white hover:bg-slate-50/50 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-sm text-[#0E121B] truncate">
+                          {farmer.fullName}
+                        </h4>
+                        <span className="text-xs text-slate-500 font-normal">
+                          {farmer.id}
+                        </span>
                       </div>
-                      <div className="text-[11px] font-normal text-slate-500 mt-0.5">
-                        {farmer.id}
-                      </div>
-                    </TableCell>
+                      <StatusBadge status={farmer.syncStatus} />
+                    </div>
 
-                    <TableCell className="text-xs text-slate-700 font-normal">
-                      {farmer.phoneNumber}
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="font-medium text-[#0E121B] text-xs">
-                        {farmer.village}
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-50">
+                      <div>
+                        <span className="text-slate-400 block text-[10px] uppercase font-medium">Contact Phone</span>
+                        <a
+                          href={`tel:${farmer.phoneNumber}`}
+                          className="text-emerald-700 font-medium hover:underline text-xs"
+                        >
+                          {farmer.phoneNumber}
+                        </a>
                       </div>
-                      <div className="text-[11px] text-slate-500">
-                        {farmer.lgaName}, {farmer.stateName}
+                      <div>
+                        <span className="text-slate-400 block text-[10px] uppercase font-medium">Location</span>
+                        <span className="text-slate-700 truncate block text-xs">
+                          {farmer.village}, {farmer.lgaName}
+                        </span>
                       </div>
-                    </TableCell>
+                    </div>
 
-                    <TableCell>
-                      <span className="inline-block text-xs font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-100">
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-50 flex-wrap">
+                      <span className="inline-block text-[11px] font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-100">
                         {farmer.programme}
                       </span>
-                    </TableCell>
 
-                    {!isOfficer && (
-                      <TableCell className="text-xs text-slate-600">
-                        {farmer.registeredBy || "Field Officer"}
-                      </TableCell>
-                    )}
-
-                    <TableCell>
-                      {/* Status Badge replicating pmtool AlignUITable StatusBadge */}
-                      <StatusBadge status={farmer.syncStatus} />
-                    </TableCell>
-
-                    <TableCell className="text-right">
-                      {isPending && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRetry(farmer)}
-                          disabled={!isOnline || isSyncing}
-                          className="h-8 text-xs font-medium border-amber-300 text-amber-800 hover:bg-amber-50"
-                        >
-                          Sync
-                        </Button>
-                      )}
-
-                      {isFailed && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRetry(farmer)}
-                          disabled={!isOnline || isSyncing}
-                          className="h-8 text-xs font-medium border-rose-300 text-rose-800 hover:bg-rose-50"
-                        >
-                          Retry
-                        </Button>
-                      )}
-
-                      {isSynced && (
-                        <span className="text-xs text-emerald-600 font-medium">
-                          Synced
+                      {!isOfficer && (
+                        <span className="text-[11px] text-slate-500 truncate">
+                          By: {farmer.registeredBy || "Field Officer"}
                         </span>
                       )}
-                    </TableCell>
-                  </TableRow>
+                    </div>
+
+                    {/* Mobile Action Buttons */}
+                    {(isPending || isFailed) && (
+                      <div className="pt-2 border-t border-gray-100">
+                        {isPending && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRetry(farmer)}
+                            disabled={!isOnline || isSyncing}
+                            className="w-full h-8 text-xs font-medium border-amber-300 text-amber-800 hover:bg-amber-50"
+                          >
+                            Sync to Central Database
+                          </Button>
+                        )}
+                        {isFailed && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRetry(farmer)}
+                            disabled={!isOnline || isSyncing}
+                            className="w-full h-8 text-xs font-medium border-rose-300 text-rose-800 hover:bg-rose-50"
+                          >
+                            Retry Sync
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+            </div>
+
+            {/* Desktop Structured Table (>= md) */}
+            <div className="hidden md:block overflow-x-auto max-h-150 overflow-y-auto scrollbar-thin">
+              <Table className="min-w-[750px]">
+                <TableHeader className="sticky top-0 z-10 bg-[#F5F7FA] shadow-xs">
+                  <TableRow>
+                    <TableHead>Farmer</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Location (LGA & Village)</TableHead>
+                    <TableHead>Programme</TableHead>
+                    {!isOfficer && <TableHead>Officer</TableHead>}
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredFarmers.map((farmer) => {
+                    const isPending = farmer.syncStatus === "pending";
+                    const isSynced = farmer.syncStatus === "synced";
+                    const isFailed = farmer.syncStatus === "failed";
+
+                    return (
+                      <TableRow key={farmer.id}>
+                        <TableCell>
+                          <div className="font-semibold text-[#0E121B]">
+                            {farmer.fullName}
+                          </div>
+                          <div className="text-[11px] font-normal text-slate-500 mt-0.5">
+                            {farmer.id}
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="text-xs text-slate-700 font-normal">
+                          {farmer.phoneNumber}
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="font-medium text-[#0E121B] text-xs">
+                            {farmer.village}
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            {farmer.lgaName}, {farmer.stateName}
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <span className="inline-block text-xs font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-100">
+                            {farmer.programme}
+                          </span>
+                        </TableCell>
+
+                        {!isOfficer && (
+                          <TableCell className="text-xs text-slate-600">
+                            {farmer.registeredBy || "Field Officer"}
+                          </TableCell>
+                        )}
+
+                        <TableCell>
+                          <StatusBadge status={farmer.syncStatus} />
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          {isPending && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRetry(farmer)}
+                              disabled={!isOnline || isSyncing}
+                              className="h-8 text-xs font-medium border-amber-300 text-amber-800 hover:bg-amber-50"
+                            >
+                              Sync
+                            </Button>
+                          )}
+
+                          {isFailed && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRetry(farmer)}
+                              disabled={!isOnline || isSyncing}
+                              className="h-8 text-xs font-medium border-rose-300 text-rose-800 hover:bg-rose-50"
+                            >
+                              Retry
+                            </Button>
+                          )}
+
+                          {isSynced && (
+                            <span className="text-xs text-emerald-600 font-medium">
+                              Synced
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
     </main>
   </div>
   );

@@ -72,6 +72,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title, subtitle }) => {
           </svg>
         </button>
 
+        {/* Mobile Brand Logo */}
+        <img
+          src="/logo.png"
+          alt="One Acre Fund"
+          className="h-6 w-auto object-contain lg:hidden shrink-0"
+        />
+
         {title ? (
           <div className="min-w-0">
             <h2 className="text-sm sm:text-base font-semibold text-[#0E121B] leading-tight truncate">
